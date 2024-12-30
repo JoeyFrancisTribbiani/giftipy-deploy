@@ -2,8 +2,7 @@ FROM php:8.2.11-apache
 
 ARG DOWNLOAD_URL
 ARG FOLDER
-
-
+ARG PHP_INI_DIR
 ARG OC_VERSION='4.0.2.3'
 
 ENV DIR_OPENCART='/var/www/html/'
