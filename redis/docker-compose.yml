@@ -1,8 +1,13 @@
 version: '3.3'
+networks:
+    will_net:
+      external: true
 services:
   redis:
     image: redis:latest
     container_name: redis
+    networks:
+      - will_net
     restart: always
     ports:
       - '6379:6379'

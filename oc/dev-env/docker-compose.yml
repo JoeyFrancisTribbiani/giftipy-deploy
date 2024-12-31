@@ -1,26 +1,35 @@
 version: '3'
+networks:
+    will_net:
+      external: true
 services:
   opencart:
     build: ./
     user: root
     ports:
-      - "80:80"
+      - "8098:80"
     volumes:
-      - ./opencart/upload:/var/www/html
+      - ../../../opencart/upload:/var/www/html
     # depends_on:
     #   - mysql
+    networks:
+      - will_net
     command: >
       bash -c "if [ ! -f /var/www/html/install.lock ]; then
                  wait-for-it mysql:3306 -t 60 &&
                  cp config-dist.php config.php
                  cp admin/config-dist.php admin/config.php
-                 php /var/www/html/install/cli_install.php install --username admin --password admin --email email@example.com --http_server http://localhost/ --db_driver mysqli --db_hostname mysql --db_username root --db_password opencart --db_database opencart --db_port 3306 --db_prefix oc_;
-                 touch /var/www/html/install.lock;
                fi &&
+               chown -R www-data:www-data /var/www/html &&
+               chmod -R 755 /var/www/html &&
+               chown -R www-data:www-data /var/www/html/image &&
+               chmod -R 744 /var/www/html/image &&
                apache2-foreground"
 
   adminer:
     image: adminer:latest
+    networks:
+      - will_net
     environment:
       ADMINER_DEFAULT_SERVER: mysql
     # depends_on:
@@ -29,4 +38,6 @@ services:
       - "8080:8080"
 
   memcached:
+    networks:
+      - will_net
     image: memcached:latest

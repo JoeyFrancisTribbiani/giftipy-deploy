@@ -73,5 +73,6 @@ echo "========== 配置docker开机自启 =========="
 # sudo systemctl enable docker.service
 sudo systemctl enable containerd.service
 
+sudo docker network create will_net
 
 echo "========== deploy依赖初始环境完成 =========="

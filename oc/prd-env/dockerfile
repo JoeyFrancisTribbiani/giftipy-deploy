@@ -1,9 +1,9 @@
 FROM php:8.2.11-apache
 
-ARG DOWNLOAD_URL
+ARG LOCAL_ZIP_PATH="opencart-4.0.2.3.zip"
+ARG DOWNLOAD_URL='https://github.com/opencart/opencart/releases/download/4.0.2.3/opencart-4.0.2.3.zip'
 ARG FOLDER
 ARG PHP_INI_DIR
-ARG OC_VERSION='4.0.2.3'
 
 ENV DIR_OPENCART='/var/www/html/'
 ENV DIR_STORAGE='/storage/'
@@ -24,29 +24,23 @@ RUN apt-get install -y \
   libzip-dev \
   && docker-php-ext-configure gd --with-freetype --with-jpeg\
   && docker-php-ext-install -j$(nproc) gd \
-  && docker-php-ext-install zip && && docker-php-ext-enable zip\
-  && docker-php-ext-enable mysqli
+  && docker-php-ext-install zip && docker-php-ext-enable zip\
+  && docker-php-ext-install mysqli && docker-php-ext-enable mysqli
 
 RUN apt-get install -y vim
 
 RUN mkdir /storage && mkdir /opencart
+RUN mkdir /tmp/opencart
+COPY opencart-4.0.2.3.zip /tmp/opencart.zip 
+# RUN ls /tmp/opencart/
 
-RUN if [ -z "$DOWNLOAD_URL" ]; then \
-  curl -Lo /tmp/opencart.zip $(sh -c 'curl -s https://api.github.com/repos/opencart/opencart/releases/${OC_VERSION} | grep "browser_download_url" | cut -d : -f 2,3 | tr -d \"'); \
-  else \
-  curl -Lo /tmp/opencart.zip ${DOWNLOAD_URL}; \
-  fi
-
-RUN unzip /tmp/opencart.zip -d  /tmp/opencart;
+RUN unzip /tmp/opencart.zip -d  /tmp/opencart
 
 RUN mv /tmp/opencart/$(if [ -n "$FOLDER" ]; then echo $FOLDER; else  unzip -l /tmp/opencart.zip | awk '{print $4}' | grep -E 'opencart-[a-z0-9.]+/upload/$'; fi)* ${DIR_OPENCART};
 
 RUN rm -rf /tmp/opencart.zip && rm -rf /tmp/opencart && rm -rf ${DIR_OPENCART}install;
 
 RUN mv ${DIR_OPENCART}system/storage/* /storage
-COPY configs ${DIR_OPENCART}
-COPY php.ini ${PHP_INI_DIR}
-
 RUN a2enmod rewrite
 
 RUN chown -R www-data:www-data ${DIR_STORAGE}
